@@ -28,7 +28,8 @@ class ChatResponse(BaseModel):
     history: List[ChatTurn]
 
 # --- Groq Client Setup ---
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+groq_api_key = os.getenv("GROQ_API_KEY") or "dummy_key"
+client = Groq(api_key=groq_api_key)
 LLM_MODEL = "llama-3.1-8b-instant" # Using the latest fast Llama 3.1 model
 
 @private_router.post("/chatbot", response_model=ChatResponse, tags=["Chatbot"])
@@ -37,6 +38,16 @@ def chat_with_assistant(
     db: Session = Depends(security.get_db),
     current_user: User = Depends(security.get_current_user)
 ):
+    if not os.getenv("GROQ_API_KEY"):
+        updated_history = message.history + [
+            ChatTurn(role="user", content=message.content),
+            ChatTurn(role="assistant", content="The AI Chatbot is currently unavailable because the GROQ_API_KEY environment variable is not configured. Please set a valid GROQ_API_KEY in your backend environment variables or a .env file to enable this feature.")
+        ]
+        return {
+            "response": "The AI Chatbot is currently unavailable because the GROQ_API_KEY environment variable is not configured. Please set a valid GROQ_API_KEY in your backend environment variables or a .env file to enable this feature.",
+            "history": updated_history
+        }
+
     try:
         system_prompt = {"role": "system", "content": "You are a helpful, menu-driven inventory assistant..."}
         messages = [system_prompt] + [turn.dict() for turn in message.history] + [{"role": "user", "content": message.content}]

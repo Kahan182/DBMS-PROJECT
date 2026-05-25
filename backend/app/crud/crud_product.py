@@ -45,3 +45,9 @@ def delete_product(db: Session, product_id: int):
         db.commit()
         return db_product
     return None # Return None if product not found
+
+def get_product_by_name(db: Session, name: str):
+    """
+    Fetches a product by its name using a case-insensitive search.
+    """
+    return db.query(model.Product).filter(model.Product.name.like(f"%{name}%")).first()

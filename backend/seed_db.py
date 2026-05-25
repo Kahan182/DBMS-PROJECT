@@ -2,8 +2,7 @@
 
 import sys
 from datetime import datetime, timedelta
-from app.database.session import SessionLocal, Base, engine
-from app.models import model
+from app.security import get_password_hash
 
 def seed():
     print("Connecting to database and starting seed process...")
@@ -25,7 +24,7 @@ def seed():
     print("Seeding Users...")
     admin_user = model.User(
         email="admin@inventory.com",
-        hashed_password="hashed_password_placeholder" # Simple placeholder for test
+        hashed_password=get_password_hash("admin")
     )
     db.add(admin_user)
 
